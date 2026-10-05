@@ -13,7 +13,13 @@ import (
 // stateVersion 是当前状态文件格式版本。
 // 兼容规则：可读取 version <= stateVersion 的文件（旧版本按当前结构解析，
 // 缺失字段取零值）；version > stateVersion 的文件无法安全处理，显式拒绝。
-const stateVersion = 1
+//
+// 版本历史：
+//   - v1：id/status/attempts/last_error/updated_at。
+//   - v2：新增 priority/depends_on/not_before（依赖、优先级、时间语义）。
+//     v2 文件包含 v1 运行时不理解的调度语义，故旧运行时（支持到 v1）会
+//     按既有规则显式拒绝 v2 文件，而不是静默忽略新字段。
+const stateVersion = 2
 
 // jobRecord 是持久化的作业状态记录。
 type jobRecord struct {
@@ -22,6 +28,10 @@ type jobRecord struct {
 	Attempts  int       `json:"attempts"`
 	LastError string    `json:"last_error,omitempty"`
 	UpdatedAt time.Time `json:"updated_at"`
+	// v2 新增字段；读取 v1 文件时取零值（无依赖、默认优先级、立即可调度）。
+	Priority  int       `json:"priority,omitempty"`
+	DependsOn []string  `json:"depends_on,omitempty"`
+	NotBefore time.Time `json:"not_before,omitempty"` // 生效中的最早可调度时间（含退避截止）
 }
 
 // stateFile 是状态文件的顶层结构，带版本号以支持兼容读取。

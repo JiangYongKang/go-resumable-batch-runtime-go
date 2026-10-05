@@ -58,4 +58,5 @@ var (
 	ErrJobTerminal     = errors.New("batch: job already terminal") // 取消已终态的作业
 	ErrRuntimeClosed   = errors.New("batch: runtime is closed")    // 运行时已关闭
 	ErrIncompatibleVer = errors.New("batch: incompatible state version")
+	ErrDependencyCycle = errors.New("batch: dependency cycle detected") // 依赖成环（含自依赖）
 )

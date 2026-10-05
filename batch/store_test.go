@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync/atomic"
-	"time"
 	"testing"
+	"time"
 )
 
 // TestRestartCompletedNotReexecuted 验证进程重启后已完成的工作不会重复执行，
