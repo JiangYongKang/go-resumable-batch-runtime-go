@@ -58,4 +58,10 @@ var (
 	ErrJobTerminal     = errors.New("batch: job already terminal") // 取消已终态的作业
 	ErrRuntimeClosed   = errors.New("batch: runtime is closed")    // 运行时已关闭
 	ErrIncompatibleVer = errors.New("batch: incompatible state version")
+
+	// ErrDependencyFailed 是 skipped 作业 Result.Err 的根因：
+	// 前置作业未成功（失败/被取消/被跳过），本作业未执行即收尾。
+	ErrDependencyFailed = errors.New("batch: dependency not satisfied")
+	// ErrDependencyCycle 表示提交会构成依赖环（含自依赖），被显式拒绝。
+	ErrDependencyCycle = errors.New("batch: dependency cycle detected")
 )

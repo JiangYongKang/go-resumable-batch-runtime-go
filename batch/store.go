@@ -13,7 +13,13 @@ import (
 // stateVersion 是当前状态文件格式版本。
 // 兼容规则：可读取 version <= stateVersion 的文件（旧版本按当前结构解析，
 // 缺失字段取零值）；version > stateVersion 的文件无法安全处理，显式拒绝。
-const stateVersion = 1
+//
+// 版本历史：
+//   - v1：id/status/attempts/last_error/updated_at。
+//   - v2：新增作业规格（max_retries/timeout/priority/depends_on/not_before/
+//     retry_backoff）与调度状态 ready_at。全部为 omitempty，v1 文件读取时
+//     取零值（无依赖、立即就绪），语义与旧版一致。
+const stateVersion = 2
 
 // jobRecord 是持久化的作业状态记录。
 type jobRecord struct {
@@ -22,6 +28,18 @@ type jobRecord struct {
 	Attempts  int       `json:"attempts"`
 	LastError string    `json:"last_error,omitempty"`
 	UpdatedAt time.Time `json:"updated_at"`
+
+	// v2 新增：作业规格（恢复后重新提交前即可还原依赖结构与时间门控）。
+	MaxRetries   int           `json:"max_retries,omitempty"`
+	Timeout      time.Duration `json:"timeout_ns,omitempty"`
+	Priority     int           `json:"priority,omitempty"`
+	DependsOn    []string      `json:"depends_on,omitempty"`
+	NotBefore    time.Time     `json:"not_before,omitempty"`
+	RetryBackoff time.Duration `json:"retry_backoff_ns,omitempty"`
+
+	// ReadyAt 是运行期时间门控（NotBefore 或退避到期时刻）：
+	// 非零且在未来表示作业正挂起等待，重启后按原样继续等待。
+	ReadyAt time.Time `json:"ready_at,omitempty"`
 }
 
 // stateFile 是状态文件的顶层结构，带版本号以支持兼容读取。
